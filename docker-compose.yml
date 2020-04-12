@@ -1,0 +1,19 @@
+elm:
+  restart: always
+  build: .
+  ports:
+    - "8000:8000"
+  volumes:
+    - .:/code
+
+nginx:
+  restart: always
+  image: nginx
+  ports:
+    - "80:80"
+  volumes:
+    - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  volumes_from:
+    - elm
+  links:
+    - elm
