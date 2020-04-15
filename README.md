@@ -140,6 +140,7 @@ I shelled into the container, and found the right command to execute to the bina
 which turned out to be:
 
 ```bash
+docker exec -it elm-app-catalog_elm_1 bash
 elm repl
 
 # Test things!
@@ -147,7 +148,87 @@ elm repl
 :exit
 ```
 
+### Writing Code
+
+I am starting with the [incrementer](https://guide.elm-lang.org/architecture/buttons.html)
+example. I remember seeing it somewhere (but I cannot find now) but the main file
+should be called [src/Main.elm](src/Main.elm). I also realized at this point
+that my editor (gedit) didn't have a plugin to render elm files, so I made one
+[here](https://github.com/vsoch/elm-editors). Then I was able to open the file
+in my editor, and from inside the container, try compiling it:
+
+```bash
+docker exec -it elm-app-catalog_elm_1 bash
+elm make src/Main.elm
+```
+
+I first got an error about a missing module definition at the top, but then
+I was able to generate an index.html file, and run a local webserver using
+Python (2.7!) in the container.
+
+```bash
+# elm make src/Main.elm
+Success! Compiled 1 module.
+
+    Main ───> index.html
+
+# python -m SimpleHTTPServer 8000
+```
+
+Then I could open my browser to see the very simple counter:
+
+![img/counter.png](img/counter.png)
+
+#### UI Widgets
+
+My next instruction was to replace the Elm html widgets with [ui-widgets](https://github.com/mdgriffith/elm-ui).
+After some poking around, I tried shelling into the container and trying this:
+
+```bash
+$ docker exec -it elm-app-catalog_elm_1 bash
+root@6913ee3163a0:/code# elm install mdgriffith/elm-ui
+Here is my plan:
+  
+  Add:
+    mdgriffith/elm-ui    1.1.5
+
+Would you like me to update your elm.json accordingly? [Y/n]: y
+```
+
+Hey that seemed to work! Here is the updated [elm.json](elm.json):
+
+```json
+# cat elm.json 
+{
+    "type": "application",
+    "source-directories": [
+        "src"
+    ],
+    "elm-version": "0.19.1",
+    "dependencies": {
+        "direct": {
+            "elm/browser": "1.0.2",
+            "elm/core": "1.0.5",
+            "elm/html": "1.0.0",
+            "mdgriffith/elm-ui": "1.1.5"
+        },
+        "indirect": {
+            "elm/json": "1.1.3",
+            "elm/time": "1.0.0",
+            "elm/url": "1.0.0",
+            "elm/virtual-dom": "1.0.2"
+        }
+    },
+    "test-dependencies": {
+        "direct": {},
+        "indirect": {}
+    }
+}
+```
+
+And now we would want to try importing the types into our Main.elm
 **under development**
+
 
 ### Fixing Permissions
 
@@ -167,4 +248,3 @@ is not saving the file).
 
 When you want to build a "production" container not bound to the host, simply
 remove the `volumes` section in the [docker-compose.yml](docker-compose.yml).
-
