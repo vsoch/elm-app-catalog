@@ -5219,14 +5219,18 @@ var $elm$browser$Browser$sandbox = function (impl) {
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'Increment') {
-			return model + 1;
-		} else {
-			return model - 1;
+		switch (msg.$) {
+			case 'Increment':
+				return model + 1;
+			case 'Decrement':
+				return model - 1;
+			default:
+				return $author$project$Main$init;
 		}
 	});
 var $author$project$Main$Decrement = {$: 'Decrement'};
 var $author$project$Main$Increment = {$: 'Increment'};
+var $author$project$Main$Reset = {$: 'Reset'};
 var $mdgriffith$elm_ui$Internal$Model$Attr = function (a) {
 	return {$: 'Attr', a: a};
 };
@@ -11262,7 +11266,7 @@ var $author$project$Main$view = function (model) {
 					_List_Nil,
 					{
 						label: $mdgriffith$elm_ui$Element$text('Reset'),
-						onPress: $elm$core$Maybe$Nothing
+						onPress: $elm$core$Maybe$Just($author$project$Main$Reset)
 					}))
 			]));
 };

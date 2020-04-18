@@ -26,7 +26,7 @@ init =
 
 -- UPDATE
 
-type Msg = Increment | Decrement
+type Msg = Increment | Decrement | Reset
 
 update : Msg -> Model -> Model
 update msg model =
@@ -36,6 +36,9 @@ update msg model =
 
     Decrement ->
       model - 1
+
+    Reset ->
+      init
 
 
 -- VIEW
@@ -48,7 +51,7 @@ view model =
         , button [ onClick Increment ] [ text "+" ]
         , Element.layout []
             (Element.Input.button []
-                { onPress = Nothing
+                { onPress = Just Reset
                 , label = Element.text "Reset"
                 }
             )
