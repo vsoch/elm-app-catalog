@@ -2,55 +2,91 @@ module Main exposing (..)
 
 import Browser
 import Element
+import Element exposing (rgb255)
 import Element.Input
-import Html exposing (Html, button, div, text)
+import Element.Background as Background
+import Html exposing (Html, div, text)
 import Html.Events exposing (onClick)
 
+-- STYLE
+
+marigold =
+    Element.rgb255 252 186 3
+
+green =
+    Element.rgb255 8 196 27
 
 -- MAIN
-
 
 main =
   Browser.sandbox { init = init, update = update, view = view }
 
+{-| https://package.elm-lang.org/packages/elm/browser/latest/Browser
+    init, update, and view are defined below |-}
 
 
 -- MODEL
 
-type alias Model = Int
+type alias Counter = Int
+-- Counter is an alias for an Int (or Counter is of type Int)
 
-init : Model
+-- init is a function that returns an Int (type Model)
+init : Counter
 init =
   0
 
 
 -- UPDATE
 
-type Msg = Increment | Decrement | Reset
+type Action = Increment | Decrement | Reset
 
-update : Msg -> Model -> Model
-update msg model =
-  case msg of
+{-| I think this says that update is a function that takes first an Action type (e.g.,
+    Increment) which is a second function (defined within) that also takes
+    another number (Counter type) and then returns a new number (Counter) |-}
+update : Action -> Counter -> Counter
+update action counter =
+  case action of
+
+    -- Return value +1
     Increment ->
-      model + 1
+      counter + 1
 
+    -- Return value -1
     Decrement ->
-      model - 1
+      counter - 1
 
+    -- Return 0
     Reset ->
       init
 
 
 -- VIEW
 
-view : Model -> Html Msg
-view model =
+view : Counter -> Html Action
+view counter =
     div []
-        [ button [ onClick Decrement ] [ text "-" ]
-        , div [] [ text (String.fromInt model) ]
-        , button [ onClick Increment ] [ text "+" ]
+        [ Element.layout []
+            (Element.Input.button [
+               -- How do I add padding here (other style)?
+               Background.color marigold
+              ]
+              { onPress = Just Decrement
+              , label = Element.text "-"
+              }
+            )
+        , div [] [ text (String.fromInt counter) ]
         , Element.layout []
-            (Element.Input.button []
+            (Element.Input.button [
+                Background.color marigold
+              ]
+              { onPress = Just Increment
+              , label = Element.text "+"
+              }
+            )
+        , Element.layout []
+            (Element.Input.button [
+                  Background.color green
+                ]
                 { onPress = Just Reset
                 , label = Element.text "Reset"
                 }
