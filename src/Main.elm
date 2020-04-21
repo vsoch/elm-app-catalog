@@ -5,7 +5,7 @@ import Element
 import Element exposing (rgb255)
 import Element.Input
 import Element.Background as Background
-import Html exposing (Html, div)
+import Html exposing (Html)
 import Html.Events exposing (onClick)
 
 -- STYLE
