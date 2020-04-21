@@ -5,7 +5,7 @@ import Element
 import Element exposing (rgb255)
 import Element.Input
 import Element.Background as Background
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
 import Html.Events exposing (onClick)
 
 -- STYLE
@@ -27,33 +27,33 @@ main =
 
 -- MODEL
 
-type alias Counter = Int
--- Counter is an alias for an Int (or Counter is of type Int)
+type alias Model = Int
+-- Model is an alias for an Int (or Model is of type Int)
 
 -- init is a function that returns an Int (type Model)
-init : Counter
+init : Model
 init =
   0
 
 
 -- UPDATE
 
-type Action = Increment | Decrement | Reset
+type Msg = Increment | Decrement | Reset
 
-{-| I think this says that update is a function that takes first an Action type (e.g.,
+{-| I think this says that update is a function that takes first a Msg type (e.g.,
     Increment) which is a second function (defined within) that also takes
-    another number (Counter type) and then returns a new number (Counter) |-}
-update : Action -> Counter -> Counter
-update action counter =
-  case action of
+    another number (Model type) and then returns a new number (Model) |-}
+update : Msg -> Model -> Model
+update message model =
+  case message of
 
     -- Return value +1
     Increment ->
-      counter + 1
+      model + 1
 
     -- Return value -1
     Decrement ->
-      counter - 1
+      model - 1
 
     -- Return 0
     Reset ->
@@ -62,33 +62,29 @@ update action counter =
 
 -- VIEW
 
-view : Counter -> Html Action
-view counter =
-    div []
-        [ Element.layout []
-            (Element.Input.button [
-               -- How do I add padding here (other style)?
-               Background.color marigold
-              ]
-              { onPress = Just Decrement
-              , label = Element.text "-"
-              }
-            )
-        , div [] [ text (String.fromInt counter) ]
-        , Element.layout []
-            (Element.Input.button [
-                Background.color marigold
-              ]
-              { onPress = Just Increment
-              , label = Element.text "+"
-              }
-            )
-        , Element.layout []
-            (Element.Input.button [
-                  Background.color green
-                ]
-                { onPress = Just Reset
-                , label = Element.text "Reset"
-                }
-            )
+view : Model -> Html Msg
+view model =
+    Element.layout []
+    (Element.column []
+        [Element.Input.button [
+             -- How do I add padding here (other style)?
+             Background.color marigold
         ]
+        { onPress = Just Decrement
+        , label = Element.text "-"
+        }
+        ,Element.el [] (Element.text (String.fromInt model))
+        ,Element.Input.button [
+            Background.color marigold
+        ]
+        { onPress = Just Increment
+        , label = Element.text "+"
+        }
+        ,Element.Input.button [
+             Background.color green
+         ]
+         { onPress = Just Reset
+         , label = Element.text "Reset"
+         }
+        ]
+    )

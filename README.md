@@ -236,8 +236,6 @@ I was directed to look at [documentation](https://package.elm-lang.org/packages/
 akin to looking up functions and usage for any module. Things that I experimented
 with include:
 
- - changing a variable named "Model" to "Counter" because it represents an integer for the counter number, and I didn't think "model" described that accurately.
- - changed name "Msg" to "Action" so it better describes the variable.
  - testing changing the smaller variable name (model -> counter) to be something other than the lowercase version of the type to ensure that this is okay to do.
 
 ##### Replace Html.button with Elm.Input.button
@@ -306,6 +304,64 @@ green =
 
 And you can see usage in the [src/Main.elm](src/Main.elm). I haven't figured out
 how to apply other styling yet.
+
+##### Replace Html.text with the Elm UI text widget
+
+Our next task is (further removing Html from usage) is to replace the 
+text label that shows the number for the counter (currently Html.text) 
+with an Elm UI text widget. I found out very quickly that `Element.text`
+wasn't just a shoe in for `Html.text` because a third type (`Html.div`)
+expected the first:
+
+```
+The 2nd argument to `div` is not what I expect:
+
+77|         , div [] [ Element.text (String.fromInt counter) ]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This argument is a list of type:
+
+    List (Element.Element msg)
+
+But `div` needs the 2nd argument to be:
+
+    List (Html msg)
+```
+
+So I'd also need to update the code to use the "div" equivalent defined
+for Element. I think what I might want is [Element.el](https://package.elm-lang.org/packages/mdgriffith/elm-ui/latest/Element#el).
+With some help, I was able to figure out that I needed to wrap the entire view
+in an Element.layout, and then put the UI widgets in an Element.column:
+
+```elm
+-- VIEW
+
+view : Model -> Html Msg
+view model =
+    Element.layout []
+    (Element.column []
+        [Element.Input.button [
+             -- How do I add padding here (other style)?
+             Background.color marigold
+        ]
+        { onPress = Just Decrement
+        , label = Element.text "-"
+        }
+        ,Element.el [] (Element.text (String.fromInt model))
+        ,Element.Input.button [
+            Background.color marigold
+        ]
+        { onPress = Just Increment
+        , label = Element.text "+"
+        }
+        ,Element.Input.button [
+             Background.color green
+         ]
+         { onPress = Just Reset
+         , label = Element.text "Reset"
+         }
+        ]
+    )
+```
 
 ### Fixing Permissions
 
