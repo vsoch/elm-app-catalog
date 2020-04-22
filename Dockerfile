@@ -19,7 +19,7 @@ RUN curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/b
 COPY . .
 
 # Install elm-analyse and elm-linter (not globally)
-RUN npm install elm-analyse && \
+RUN npm install -g elm-analyse && \
     npm install elm-format
 ENV PATH=$PATH:/code/node_modules/elm-linter/bin
 
