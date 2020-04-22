@@ -1,23 +1,24 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Element
-import Element exposing (rgb255)
 import Element.Input
 import Element.Background as Background
 import Html exposing (Html)
-import Html.Events exposing (onClick)
 
 -- STYLE
 
+marigold: Element.Color
 marigold =
     Element.rgb255 252 186 3
 
+green: Element.Color
 green =
     Element.rgb255 8 196 27
 
 -- MAIN
 
+main: Program () Model Msg
 main =
   Browser.sandbox { init = init, update = update, view = view }
 
