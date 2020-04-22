@@ -179,6 +179,10 @@ Then I could open my browser to see the very simple counter:
 
 ![img/counter.png](img/counter.png)
 
+You can imagine that you might also want to pull some changes from
+a branch (for PR or other) on your host, and then shell into the
+container and regenerate the index.html.
+
 #### UI Widgets
 
 My next instruction was to replace the Elm html widgets with [ui-widgets](https://github.com/mdgriffith/elm-ui).
@@ -226,9 +230,164 @@ Hey that seemed to work! Here is the updated [elm.json](elm.json):
 }
 ```
 
-And now we would want to try importing the types into our Main.elm
-**under development**
+And now we would want to try importing the types into our Main.elm.
+Per code as example help from [here](https://github.com/vsoch/elm-app-catalog/pull/1/files)
+I was directed to look at [documentation](https://package.elm-lang.org/packages/mdgriffith/elm-ui/latest/Element) to familiarize myself with the Element namespace. This is 
+akin to looking up functions and usage for any module. Things that I experimented
+with include:
 
+ - testing changing the smaller variable name (model -> counter) to be something other than the lowercase version of the type to ensure that this is okay to do.
+
+##### Replace Html.button with Elm.Input.button
+
+The next goal is to replace increment and decrement buttons 
+(currently type Html.button) with Elm UI buttons (Element.Input.button).
+Since we've already imported Element, I can likely reference Element.Input.button.
+I found documentation for [Element.Input](https://package.elm-lang.org/packages/mdgriffith/elm-ui/latest/Element-Input) and then there was already a hint in the PR code for
+how to do this:
+
+```elm
+(Element.Input.button []
+    { onPress = Just Reset
+     , label = Element.text "Reset"
+    }
+)
+```
+
+I'm not totally clear on what "Just" is but it seems to be related to [typing](https://medium.com/wat-the-elm-ist/maybe-its-just-nothing-ffa85785fa85) so I'm going to copy the
+convention and use it for now. This should be fairly easy then, I just need to replace
+
+```elm
+[ button [ onClick Decrement ] [ text "-" ]
+```
+
+with something like the above for each button type. That looked like this:
+
+```elm
+view : Counter -> Html Action
+view counter =
+    div []
+        [ Element.layout []
+            (Element.Input.button []
+              { onPress = Just Decrement
+              , label = Element.text "-"
+              }
+            )
+        , div [] [ text (String.fromInt counter) ]
+        , Element.layout []
+            (Element.Input.button []
+              { onPress = Just Increment
+              , label = Element.text "+"
+              }
+            )
+        , Element.layout []
+            (Element.Input.button []
+                { onPress = Just Reset
+                , label = Element.text "Reset"
+                }
+            )
+        ]
+```
+
+And that seemed to work! However the buttons are now unstyled. Let's see
+if we can apply some quick fixes to make them prettier (or at least give them
+more structure). I figured out how to define colors and use them, e.g., here is
+definition:
+
+```elm
+marigold =
+    Element.rgb255 252 186 3
+
+green =
+    Element.rgb255 8 196 27
+```
+
+And you can see usage in the [src/Main.elm](src/Main.elm). I haven't figured out
+how to apply other styling yet.
+
+##### Replace Html.text with the Elm UI text widget
+
+Our next task is (further removing Html from usage) is to replace the 
+text label that shows the number for the counter (currently Html.text) 
+with an Elm UI text widget. I found out very quickly that `Element.text`
+wasn't just a shoe in for `Html.text` because a third type (`Html.div`)
+expected the first:
+
+```
+The 2nd argument to `div` is not what I expect:
+
+77|         , div [] [ Element.text (String.fromInt counter) ]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This argument is a list of type:
+
+    List (Element.Element msg)
+
+But `div` needs the 2nd argument to be:
+
+    List (Html msg)
+```
+
+So I'd also need to update the code to use the "div" equivalent defined
+for Element. I think what I might want is [Element.el](https://package.elm-lang.org/packages/mdgriffith/elm-ui/latest/Element#el).
+With some help, I was able to figure out that I needed to wrap the entire view
+in an Element.layout, and then put the UI widgets in an Element.column:
+
+```elm
+-- VIEW
+
+view : Model -> Html Msg
+view model =
+    Element.layout []
+    (Element.column []
+        [Element.Input.button [
+             -- How do I add padding here (other style)?
+             Background.color marigold
+        ]
+        { onPress = Just Decrement
+        , label = Element.text "-"
+        }
+        ,Element.el [] (Element.text (String.fromInt model))
+        ,Element.Input.button [
+            Background.color marigold
+        ]
+        { onPress = Just Increment
+        , label = Element.text "+"
+        }
+        ,Element.Input.button [
+             Background.color green
+         ]
+         { onPress = Just Reset
+         , label = Element.text "Reset"
+         }
+        ]
+    )
+```
+
+### Formatting and Linting
+
+Each of
+
+   - https://github.com/stil4m/elm-analyse
+   - https://github.com/avh4/elm-format
+
+are installed in the container so that you can run formatting and analyzing.
+
+```bash
+$ elm-analyse
+...
+Found 1 message(s)
+
+Messages:
+- src/Main.elm
+  > Record has only one field. Use the field's type or introduce a Type. At ((43,5),(43,22))
+```
+```bash
+$ elm-format --validate .
+[]
+```
+
+You will need to fix permissions if the files are edited from within the container
+(discussed next).
 
 ### Fixing Permissions
 
