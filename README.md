@@ -363,6 +363,32 @@ view model =
     )
 ```
 
+### Formatting and Linting
+
+Each of
+
+   - https://github.com/stil4m/elm-analyse
+   - https://github.com/avh4/elm-format
+
+are installed in the container so that you can run formatting and analyzing.
+
+```bash
+$ elm-analyse
+...
+Found 1 message(s)
+
+Messages:
+- src/Main.elm
+  > Record has only one field. Use the field's type or introduce a Type. At ((43,5),(43,22))
+```
+```bash
+$ elm-format --validate .
+[]
+```
+
+You will need to fix permissions if the files are edited from within the container
+(discussed next).
+
 ### Fixing Permissions
 
 When I'm done developing inside the container, it's fairly straight forward
