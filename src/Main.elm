@@ -27,13 +27,13 @@ main =
 
 -- MODEL
 
-type alias Model = Int
--- Model is an alias for an Int (or Model is of type Int)
+type alias Model = { counter: Int }
+-- Model is record that holds an integer counter
 
 -- init is a function that returns an Int (type Model)
 init : Model
 init =
-  0
+  { counter = 0}
 
 
 -- UPDATE
@@ -49,11 +49,11 @@ update message model =
 
     -- Return value +1
     Increment ->
-      model + 1
+     { counter = model.counter + 1}
 
     -- Return value -1
     Decrement ->
-      model - 1
+     { counter = model.counter - 1}
 
     -- Return 0
     Reset ->
@@ -67,18 +67,18 @@ view model =
     Element.layout []
     (Element.column []
         [Element.Input.button [
-             -- How do I add padding here (other style)?
              Background.color marigold
-        ]
-        { onPress = Just Decrement
-        , label = Element.text "-"
-        }
-        ,Element.el [] (Element.text (String.fromInt model))
-        ,Element.Input.button [
-            Background.color marigold
         ]
         { onPress = Just Increment
         , label = Element.text "+"
+        }
+        ,Element.el [] (Element.text (String.fromInt model.counter))
+
+        ,Element.Input.button [
+            Background.color marigold
+        ]
+        { onPress = Just Decrement
+        , label = Element.text "-"
         }
         ,Element.Input.button [
              Background.color green

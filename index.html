@@ -4406,7 +4406,7 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-var $author$project$Main$init = 0;
+var $author$project$Main$init = {counter: 0};
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5221,9 +5221,9 @@ var $author$project$Main$update = F2(
 	function (message, model) {
 		switch (message.$) {
 			case 'Increment':
-				return model + 1;
+				return {counter: model.counter + 1};
 			case 'Decrement':
-				return model - 1;
+				return {counter: model.counter - 1};
 			default:
 				return $author$project$Main$init;
 		}
@@ -11292,14 +11292,14 @@ var $author$project$Main$view = function (model) {
 							$mdgriffith$elm_ui$Element$Background$color($author$project$Main$marigold)
 						]),
 					{
-						label: $mdgriffith$elm_ui$Element$text('-'),
-						onPress: $elm$core$Maybe$Just($author$project$Main$Decrement)
+						label: $mdgriffith$elm_ui$Element$text('+'),
+						onPress: $elm$core$Maybe$Just($author$project$Main$Increment)
 					}),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_Nil,
 					$mdgriffith$elm_ui$Element$text(
-						$elm$core$String$fromInt(model))),
+						$elm$core$String$fromInt(model.counter))),
 					A2(
 					$mdgriffith$elm_ui$Element$Input$button,
 					_List_fromArray(
@@ -11307,8 +11307,8 @@ var $author$project$Main$view = function (model) {
 							$mdgriffith$elm_ui$Element$Background$color($author$project$Main$marigold)
 						]),
 					{
-						label: $mdgriffith$elm_ui$Element$text('+'),
-						onPress: $elm$core$Maybe$Just($author$project$Main$Increment)
+						label: $mdgriffith$elm_ui$Element$text('-'),
+						onPress: $elm$core$Maybe$Just($author$project$Main$Decrement)
 					}),
 					A2(
 					$mdgriffith$elm_ui$Element$Input$button,
