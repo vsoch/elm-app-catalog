@@ -30,6 +30,13 @@ and the following goals for development and learning:
 Once the above works, it should be possible to change the set of appications to install
 to one that is general for a server, and perhaps using cloud init.
 
+## Branches
+
+Each step in development (described below) when finished is pushed to a particular
+branch. The project app is changing a lot, so this ensures that you can always
+go back to a particular version without needing to dig into commit history.
+
+ - [step1-ui-widgets](https://github.com/vsoch/elm-app-catalog/tree/step1-ui-widgets) includes through the addition of the UI Widgets to create a simple counter app.
 
 ## Development
 
@@ -361,6 +368,121 @@ view model =
          }
         ]
     )
+```
+
+If you are interested in the code after this step, see the branch 
+[step1-ui-widgets](https://github.com/vsoch/elm-app-catalog/tree/step1-ui-widgets).
+
+#### Adding Http
+
+I next want to add a simple endpoint to retrieve some content at a json API,
+and spit it out onto the page. I first needed to install Http, and add it to
+import at the top of my file. Inside my container:
+
+```bash
+$ elm install elm/http
+```
+And then I could import it at the top!
+
+```elm
+import Http
+```
+
+I then need to add a variable to the browser that will handle the content that I'm
+going to retrieve. Following the example [here](https://guide.elm-lang.org/effects/http.html), 
+we can call them apps instead of subscriptions:
+
+```elm
+main : Program () Model Msg
+main =
+    Browser.sandbox { init = init, update = update, view = view, apps = apps }
+```
+
+It looks like a subscription can have three states - `FAILED`, `SUCCESS`, and `LOADING`,
+and this is likely true for apps as well. Let's define an AppModel for that:
+
+```elm
+type AppModel
+  = Failure
+  | Loading
+  | Success String
+```
+
+And then we need to update the new general Model and init method to handle both the original counter 
+and this new Model. I did this by defining a variable, "status" that holds an AppState.
+
+```elm
+type AppState
+    = Failure
+    | Loading
+    | Success String
+
+
+type alias Model =
+    { counter : Int
+    , status : AppState
+    }
+```
+
+And then init is supposed to return a Model and Msg Cmd, so it's modified to look
+like this:
+
+```elm
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { counter = 0
+      , status = Loading
+      }
+    , Http.get
+        { url = "https://elm-lang.org/assets/public-opinion.txt"
+        , expect = Http.expectString GotText
+        }
+    )
+```
+
+`elm-format` was very helpful here in figuring out the parentheses and formatting
+that I needed. Since the function above expects a Model, Cmd and Msg returned (note
+that there isn't a comma between Cmd and Msg and I'm not sure why), it follows
+that the `Http.get` maps to the Cmd, and the rest in the curly brackets is the Msg.
+
+Next we needed to investigate what exactly a message is, which looks like it should
+have a variable called `GotText` in it. I think the full statement is
+saying that "We are expecting a string so we use the method 
+[Http.expectString](https://package.elm-lang.org/packages/elm/http/latest/Http#expectString) 
+and, and `GotText` is a variable  we are putting it into. Next we need to add that variable:
+I suspect we need a Msg type next.
+
+```elm
+type Msg
+  = GotText (Result Http.Error String)
+```
+I'm going to read this superficially for now - the Msg that we want to return 
+(to the update function I think) is a combined Result object, any errors,
+and then our string. This [Result](https://package.elm-lang.org/packages/elm/core/latest/Result)
+is similar to error handling with other languages, and I'll just take it verbatim for
+now. The [tutorial](https://guide.elm-lang.org/effects/http.html) has some nice examples:
+
+```
+-- GotText (Err Http.NetworkError)
+-- GotText (Err (Http.BadStatus 404)
+```
+I'm not sure if this will work, but I again need to combine a previous Msg with
+this new one, so I separated them into two variables and created a shared Msg for
+update:
+
+```elm
+type AppMsg
+  = GotText (Result Http.Error String)
+
+type CounterMsg
+    = Increment
+    | Decrement
+    | Reset
+
+
+type Msg =
+{ app: AppMsg,
+  counter: CounterMsg } 
 ```
 
 ### Formatting and Linting
