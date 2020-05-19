@@ -21,7 +21,6 @@ COPY . .
 # Install elm-analyse and elm-linter (not globally)
 RUN npm install -g elm-analyse && \
     npm install elm-format
-ENV PATH=$PATH:/code/node_modules/elm-linter/bin
-
+ENV PATH=$PATH:/code/node_modules/elm-linter/bin:/code/node_modules/elm-format/bin
 EXPOSE 8000
 ENTRYPOINT ["/code/docker/entrypoint.sh"]
