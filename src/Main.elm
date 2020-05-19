@@ -4,7 +4,7 @@ import Browser
 import Element
 import Element.Background as Background
 import Element.Input
-import Html exposing (Html, pre, text)
+import Html exposing (Html)
 import Http
 
 
@@ -28,7 +28,7 @@ green =
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view, apps = apps }
+    Browser.element { init = init, update = update, view = view, subscriptions = \_ -> Sub.none }
 
 
 {-| <https://package.elm-lang.org/packages/elm/browser/latest/Browser>
@@ -57,7 +57,7 @@ type alias Model =
 -- init is a function that returns an Int (type Model)
 
 
-init : () -> ( Model, Cmd AppMsg )
+init : () -> ( Model, Cmd Msg )
 init _ =
     ( { counter = 0
       , status = Loading
@@ -74,20 +74,11 @@ init _ =
 -- this is saying GotText can be a result, error, OR string?
 
 
-type AppMsg
-    = GotText (Result Http.Error String)
-
-
-type CounterMsg
+type Msg
     = Increment
     | Decrement
     | Reset
-
-
-type alias Msg =
-    { app : AppMsg
-    , counter : CounterMsg
-    }
+    | GotText (Result Http.Error String)
 
 
 {-| I think this says that update is a function that takes first a Msg type (e.g.,
@@ -95,72 +86,26 @@ Increment) which is a second function (defined within) that also takes
 another number (Model type) and then returns a new number (Model) |
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
+update msg model =
     -- Handle the API request first
-    case message.app of
+    case msg of
         GotText result ->
             case result of
                 Ok fullText ->
-                    case message.counter of
-                        -- Return value +1
-                        Increment ->
-                            ( { counter = model.counter + 1
-                              , status = Success fullText
-                              }
-                            , Cmd.none
-                            )
-
-                        -- Return value -1
-                        Decrement ->
-                            ( { counter = model.counter - 1
-                              , status = Success fullText
-                              }
-                            , Cmd.none
-                            )
-
-                        -- Return 0
-                        Reset ->
-                            ( { counter = 0
-                              , status = Success fullText
-                              }
-                            , Cmd.none
-                            )
+                    ( { model | status = Success fullText }, Cmd.none )
 
                 -- Cmd.none means there is nothing left to do
                 Err _ ->
-                    case message.counter of
-                        -- Return value +1
-                        Increment ->
-                            ( { counter = model.counter + 1
-                              , status = Failure
-                              }
-                            , Cmd.none
-                            )
+                    ( { model | status = Failure }, Cmd.none )
 
-                        -- Return value -1
-                        Decrement ->
-                            ( { counter = model.counter - 1
-                              , status = Failure
-                              }
-                            , Cmd.none
-                            )
+        Increment ->
+            ( { model | counter = model.counter + 1 }, Cmd.none )
 
-                        -- Return 0
-                        Reset ->
-                            ( { counter = 0
-                              , status = Failure
-                              }
-                            , Cmd.none
-                            )
+        Decrement ->
+            ( { model | counter = model.counter - 1 }, Cmd.none )
 
-
-
--- APPS
-
-
-apps : Model -> Sub Msg
-apps model =
-    Sub.none
+        Reset ->
+            ( { model | counter = 0 }, Cmd.none )
 
 
 
@@ -175,13 +120,13 @@ view model =
                 (Element.text
                     (case model.status of
                         Failure ->
-                            Element.text "I was unable to load the text!"
+                            "I was unable to load the text!"
 
                         Loading ->
-                            Element.text "Loading..."
+                            "Loading..."
 
                         Success fullText ->
-                            Element.text fullText
+                            fullText
                     )
                 )
             , Element.Input.button
