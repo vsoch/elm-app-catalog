@@ -28,7 +28,7 @@ green =
 
 main : Program () Model Msg
 main =
-    Browser.element { init = init, update = update, view = view, subscriptions = \_ -> Sub.none }
+    Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
 
 
 {-| <https://package.elm-lang.org/packages/elm/browser/latest/Browser>
@@ -40,7 +40,7 @@ init, update, and view are defined below |
 -- MODEL
 
 
-type AppState
+type SubState
     = Failure
     | Loading
     | Success String
@@ -48,7 +48,7 @@ type AppState
 
 type alias Model =
     { counter : Int
-    , status : AppState
+    , status : SubState
     }
 
 
@@ -71,7 +71,6 @@ init _ =
 
 
 -- UPDATE
--- this is saying GotText can be a result, error, OR string?
 
 
 type Msg
@@ -89,6 +88,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     -- Handle the API request first
     case msg of
+        Increment ->
+            ( { model | counter = model.counter + 1 }, Cmd.none )
+
+        Decrement ->
+            ( { model | counter = model.counter - 1 }, Cmd.none )
+
+        Reset ->
+            ( { model | counter = 0 }, Cmd.none )
+
         GotText result ->
             case result of
                 Ok fullText ->
@@ -98,14 +106,13 @@ update msg model =
                 Err _ ->
                     ( { model | status = Failure }, Cmd.none )
 
-        Increment ->
-            ( { model | counter = model.counter + 1 }, Cmd.none )
 
-        Decrement ->
-            ( { model | counter = model.counter - 1 }, Cmd.none )
 
-        Reset ->
-            ( { model | counter = 0 }, Cmd.none )
+-- APPS
+
+
+subscriptions _ =
+    Sub.none
 
 
 
