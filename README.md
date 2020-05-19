@@ -389,40 +389,35 @@ import Http
 ```
 
 I then need to add a variable to the browser that will handle the content that I'm
-going to retrieve. Following the example [here](https://guide.elm-lang.org/effects/http.html), 
-we can call them apps instead of subscriptions:
+going to retrieve. Following the example [here](https://guide.elm-lang.org/effects/http.html).
+I originally called them "apps" until I realized that [subscriptions were a known thing](https://elmprogramming.com/subscriptions.html).
 
 ```elm
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view, apps = apps }
+    Browser.sandbox { init = init, update = update, view = view, subscriptions = subscriptions }
 ```
 
-It looks like a subscription can have three states - `FAILED`, `SUCCESS`, and `LOADING`,
-and this is likely true for apps as well. Let's define an AppModel for that:
+It looks like a subscription can have three states - `FAILED`, `SUCCESS`, and `LOADING`. 
+Let's define a Model for that. But first, we need to represent these states. Let's call that `SubState`.
 
 ```elm
-type AppModel
-  = Failure
-  | Loading
-  | Success String
-```
-
-And then we need to update the new general Model and init method to handle both the original counter 
-and this new Model. I did this by defining a variable, "status" that holds an AppState.
-
-```elm
-type AppState
+type SubState
     = Failure
     | Loading
     | Success String
+```
 
+and then we can include the SubState as "state" along with our counter (Int) in the Model
+definition. The variable "state" holds a subscription state (SubState):
 
+```
 type alias Model =
     { counter : Int
-    , status : AppState
+    , status : SubState
     }
 ```
+
 
 And then init is supposed to return a Model and Msg Cmd, so it's modified to look
 like this:
@@ -449,41 +444,79 @@ Next we needed to investigate what exactly a message is, which looks like it sho
 have a variable called `GotText` in it. I think the full statement is
 saying that "We are expecting a string so we use the method 
 [Http.expectString](https://package.elm-lang.org/packages/elm/http/latest/Http#expectString) 
-and, and `GotText` is a variable  we are putting it into. Next we need to add that variable:
-I suspect we need a Msg type next.
+and, and `GotText` is a variable  we are putting it into. Next we need to add that variable.
+If we didn't have a counter, we probably could have a Msg look like this:
 
 ```elm
 type Msg
   = GotText (Result Http.Error String)
 ```
+
+But since we do, and [after help via Julian](https://github.com/vsoch/elm-app-catalog/pull/4/files)
+realizing that I could shove different types into one Msg, we wound up doing:
+
+```elm
+type Msg
+    = Increment
+    | Decrement
+    | Reset
+    | GotText (Result Http.Error String)
+```
+
 I'm going to read this superficially for now - the Msg that we want to return 
-(to the update function I think) is a combined Result object, any errors,
-and then our string. This [Result](https://package.elm-lang.org/packages/elm/core/latest/Result)
-is similar to error handling with other languages, and I'll just take it verbatim for
+(to the update function I think) can be either a direction to Increment, Decrement,
+Reset, or that we've got Text. This means we can parse these events as a flat list in
+an update function (note that I did this hugely wrong before):
+
+```elm
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+
+    -- Handle the API request first
+    case msg of
+
+        Increment ->
+            ({ model | counter = model.counter + 1}, Cmd.none)
+
+        Decrement ->
+            ({ model | counter = model.counter - 1}, Cmd.none)
+
+        Reset ->
+            ({ model | counter = 0}, Cmd.none)
+
+        GotText result ->
+            case result of
+                Ok fullText ->
+                  ({ model | status = Success fullText}, Cmd.none )
+
+                -- Cmd.none means there is nothing left to do
+                Err _ ->
+                  ({ model | status = Failure}, Cmd.none )
+```
+
+I really like this particular syntax, specifically that you can give a directive
+to just update one attribute of a model! For example this:
+
+```elm
+({ model | counter = model.counter - 1}, Cmd.none)
+```
+says that we are updating the counter attribute of the model object, and everything
+else stays the same. For the case of GotText result, the result is a
+ [Result](https://package.elm-lang.org/packages/elm/core/latest/Result) type
+that seems similar to error handling with other languages in passing an error state,
+and then a message (e.g., the full text). I'll just take it verbatim for
 now. The [tutorial](https://guide.elm-lang.org/effects/http.html) has some nice examples:
 
 ```
 -- GotText (Err Http.NetworkError)
 -- GotText (Err (Http.BadStatus 404)
 ```
-I'm not sure if this will work, but I again need to combine a previous Msg with
-this new one, so I separated them into two variables and created a shared Msg for
-update:
 
-```elm
-type AppMsg
-  = GotText (Result Http.Error String)
+I could then do a very basic test, and see text on the page!
 
-type CounterMsg
-    = Increment
-    | Decrement
-    | Reset
+![img/step2-add-http.png](img/step2-add-http.png)
 
-
-type Msg =
-{ app: AppMsg,
-  counter: CounterMsg } 
-```
+It's ugly as heck, but it's progress!
 
 ### Formatting and Linting
 
