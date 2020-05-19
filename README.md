@@ -37,6 +37,7 @@ branch. The project app is changing a lot, so this ensures that you can always
 go back to a particular version without needing to dig into commit history.
 
  - [step1-ui-widgets](https://github.com/vsoch/elm-app-catalog/tree/step1-ui-widgets) includes through the addition of the UI Widgets to create a simple counter app.
+ - [step2-add-http](https://github.com/vsoch/elm-app-catalog/tree/step2-add-http) includes through the addition of basic http to retrieve and display a project Gutenberg page.
 
 ## Development
 
