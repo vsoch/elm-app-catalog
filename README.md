@@ -519,6 +519,98 @@ I could then do a very basic test, and see text on the page!
 
 It's ugly as heck, but it's progress!
 
+#### Adding Json
+
+Now that we've added http, we are going to largely refactor that work to instead
+parse a json object. The reason for this is because we want our subscription to
+include items from a RESTful API response. For this step, we are generally
+going to modify our application according to this [tutorial](https://guide.elm-lang.org/effects/json.html).
+The first thing we do is install elm/json:
+
+```bash
+elm install elm/json
+```
+
+and add an import:
+
+```elm
+import Json.Decode exposing (Decoder, field, string)
+```
+
+This should compile
+
+```
+elm make src/Main.elm
+```
+
+It looks like we also need [html events](https://package.elm-lang.org/packages/elm/html/latest/Html-Events) and [html attributes](https://package.elm-lang.org/packages/elm/html/latest/Html-Attributes):
+
+```elm
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+```
+
+We now want to customize our init to, instead of loading a random blob of text,
+to return a random cat gif. So we start with this:
+
+```elm
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { counter = 0
+      , status = Loading
+      }
+    , Http.get
+        { url = "https://elm-lang.org/assets/public-opinion.txt"
+        , expect = Http.expectString GotText
+        }
+    )
+```
+
+And since the second part is the Cmd and then a Msg for it, we just change
+that entire thing to some new function we will call `getRandomCatGif`
+
+
+```elm
+
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { counter = 0
+      , status = Loading
+      }
+    , getRandomCatGif
+    )
+```
+
+This is also the step where I want to remove the original counter (but still maintain
+the nested model with status) so I make these updates:
+
+```elm
+type alias Model =
+    { status : SubState }
+
+
+
+-- Model is record that holds an integer counter, and a status for loading apps
+-- init is a function that returns an Int (type Model)
+
+
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { status = Loading }
+    , getRandomCatGif
+    )
+
+
+
+-- UPDATE
+
+type Msg
+    = MorePlease
+    | GotGif (Result Http.Error String)
+
+```
+
+
 ### Formatting and Linting
 
 Each of
