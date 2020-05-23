@@ -4,9 +4,12 @@ import Browser
 import Element
 import Element.Background as Background
 import Element.Input
+import Element.Region
 import Html exposing (Html)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Http
-
+import Json.Decode exposing (Decoder, field, string)
 
 
 -- STYLE
@@ -47,9 +50,7 @@ type SubState
 
 
 type alias Model =
-    { counter : Int
-    , status : SubState
-    }
+    { status : SubState}
 
 
 
@@ -59,13 +60,8 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { counter = 0
-      , status = Loading
-      }
-    , Http.get
-        { url = "https://elm-lang.org/assets/public-opinion.txt"
-        , expect = Http.expectString GotText
-        }
+    ( { status = Loading }
+    , getRandomCatGif
     )
 
 
@@ -74,10 +70,9 @@ init _ =
 
 
 type Msg
-    = Increment
-    | Decrement
-    | Reset
-    | GotText (Result Http.Error String)
+    = MorePlease
+    | GotGif (Result Http.Error String)
+
 
 
 {-| I think this says that update is a function that takes first a Msg type (e.g.,
@@ -88,24 +83,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     -- Handle the API request first
     case msg of
-        Increment ->
-            ( { model | counter = model.counter + 1 }, Cmd.none )
+        MorePlease ->
+            ( { model | status = Loading }, getRandomCatGif )
 
-        Decrement ->
-            ( { model | counter = model.counter - 1 }, Cmd.none )
-
-        Reset ->
-            ( { model | counter = 0 }, Cmd.none )
-
-        GotText result ->
+        GotGif result ->
             case result of
-                Ok fullText ->
-                    ( { model | status = Success fullText }, Cmd.none )
+                Ok url ->
+                    ( { model | status = Success url }, Cmd.none )
 
                 -- Cmd.none means there is nothing left to do
                 Err _ ->
                     ( { model | status = Failure }, Cmd.none )
-
 
 
 -- APPS
@@ -124,36 +112,52 @@ view model =
     Element.layout []
         (Element.column []
             [ Element.el []
-                (Element.text
-                    (case model.status of
-                        Failure ->
-                            "I was unable to load the text!"
-
-                        Loading ->
-                            "Loading..."
-
-                        Success fullText ->
-                            fullText
-                    )
-                )
-            , Element.Input.button
-                [ Background.color marigold
-                ]
-                { onPress = Just Increment
-                , label = Element.text "+"
-                }
-            , Element.el [] (Element.text (String.fromInt model.counter))
-            , Element.Input.button
-                [ Background.color marigold
-                ]
-                { onPress = Just Decrement
-                , label = Element.text "-"
-                }
-            , Element.Input.button
-                [ Background.color green
-                ]
-                { onPress = Just Reset
-                , label = Element.text "Reset"
-                }
+              Element.Region.heading 2
+              { label = Element.text "Random Cats" }
+             , viewGif model
             ]
         )
+
+viewGif : Model -> Html Msg
+viewGif model =
+    case model.status of
+        Failure ->
+          [ Element.el []
+              (Element.text "I could not load a random cat.")
+              , Element.Input.button
+                [ Background.color marigold
+                ]
+                { onPress = MorePlease
+                , label = Element.text "Try Again"
+                }
+          ]  
+        Loading ->
+          [ Element.el []
+              (Element.text "Loading")
+          ]  
+        Success url ->
+          [ Element.el []
+              (Element.Input.button
+                [ Background.color marigold
+                ]
+                { onPress = MorePlease
+                , label = Element.text "More Please"
+                }
+               ,Element.image 200 200 url)
+          ]
+
+
+-- HTTP
+
+
+getRandomCatGif : Cmd Msg
+getRandomCatGif =
+  Http.get
+    { url = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cat"
+    , expect = Http.expectJson GotGif gifDecoder
+    }
+
+
+gifDecoder : Decoder String
+gifDecoder =
+  field "data" (field "image_url" string)
